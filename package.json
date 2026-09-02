@@ -1,9 +1,16 @@
 {
   "name": "ninad-assignment-5",
   "version": "1.0.0",
-  "private": true,
+  "description": "Real-Time Multiplayer Tic Tac Toe Game (Socket.io, Express, Firebase Firestore)",
+  "main": "server.js",
   "scripts": {
     "postinstall": "cd \"Ninad 150096725180\" && npm install",
-    "start": "cd \"Ninad 150096725180\" && npm start"
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "firebase-admin": "^12.0.0",
+    "socket.io": "^4.6.1"
   }
 }
