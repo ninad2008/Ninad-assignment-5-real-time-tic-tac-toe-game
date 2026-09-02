@@ -1,0 +1,9 @@
+{
+  "name": "ninad-assignment-5",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "postinstall": "cd \"Ninad 150096725180\" && npm install",
+    "start": "cd \"Ninad 150096725180\" && npm start"
+  }
+}
