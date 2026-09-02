@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEO TOKYO ARCADE // リアルタイム三目並べ</title>
+  <!-- Google Fonts: Retro Arcade + Cyber Anime -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,400;0,600;0,700;0,800;1,700&family=Orbitron:wght@500;700;900&family=Press+Start+2P&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="arcade-theme scanlines-active">
+
+  <!-- Background Anime Cyberpunk Grid & Stars -->
+  <div class="cyber-grid-bg"></div>
+  <div class="cyber-sun"></div>
+
+  <!-- CRT Screen Filter Overlay -->
+  <div class="crt-overlay" id="crt-overlay"></div>
+
+  <!-- Outer Arcade Cabinet Container -->
+  <div class="arcade-cabinet">
+
+    <!-- Arcade Cabinet Marquee Header -->
+    <header class="arcade-marquee">
+      <div class="marquee-lights">
+        <span class="light red"></span>
+        <span class="light yellow"></span>
+        <span class="light blue"></span>
+        <span class="light pink"></span>
+        <span class="light green"></span>
+        <span class="light red"></span>
+        <span class="light yellow"></span>
+        <span class="light blue"></span>
+      </div>
+
+      <div class="marquee-content">
+        <div class="marquee-brand">
+          <span class="brand-jp">超時空 対戦格闘</span>
+          <h1 class="marquee-title"><i class="fa-solid fa-gamepad"></i> NEO TOKYO ARCADE <span class="neon-badge">2099</span></h1>
+          <span class="brand-sub">REAL-TIME TIC-TAC-TOE // DUEL ARENA</span>
+        </div>
+
+        <div class="marquee-hud">
+          <!-- Audio & CRT Controls -->
+          <div class="hud-toggles">
+            <button class="arcade-btn-mini" id="sound-toggle-btn" title="Toggle 8-bit Audio">
+              <i class="fa-solid fa-volume-high" id="sound-icon"></i> <span>SFX: ON</span>
+            </button>
+            <button class="arcade-btn-mini" id="crt-toggle-btn" title="Toggle CRT Scanlines">
+              <i class="fa-solid fa-tv"></i> <span>CRT: ON</span>
+            </button>
+          </div>
+
+          <!-- Live Network Badges -->
+          <div class="arcade-status-badges">
+            <div class="arcade-pill status-connected" id="connection-status">
+              <span class="pixel-dot"></span>
+              <span id="connection-text">NET: READY</span>
+            </div>
+            <div class="arcade-pill users-pill">
+              <i class="fa-solid fa-users-viewfinder"></i>
+              <span>PLAYERS: <strong id="online-count">1</strong></span>
+            </div>
+            <div class="arcade-pill credit-pill">
+              <span>CREDIT(S) <strong class="blink-fast">02</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Arcade Screen Enclosure -->
+    <div class="arcade-screen-bezel">
+      <div class="bezel-label top-left">INSERT COIN // 1P 2P CO-OP</div>
+      <div class="bezel-label top-right">HI-SCORE: 999900</div>
+
+      <main class="arcade-screen">
+
+        <!-- Login / Insert Coin Screen -->
+        <section class="screen-card login-card" id="login-section">
+          <div class="anime-hero-banner">
+            <div class="hero-tag">CHALLENGER REGISTRATION // 挑戦者受付</div>
+            <h2 class="anime-title"><i class="fa-solid fa-bolt"></i> ENTER FIGHTER TAG</h2>
+            <p class="anime-desc">Insert your callsign to challenge online players in the Cyber Arena.</p>
+          </div>
+
+          <div class="alert alert-danger" id="login-error-msg" style="display: none;"></div>
+
+          <form id="login-form" class="anime-form">
+            <div class="form-group-arcade">
+              <label for="username-input">
+                <span class="label-jp">選手名</span> FIGHTER CALLSIGN
+              </label>
+              <div class="input-arcade-wrapper">
+                <span class="input-prefix">▶</span>
+                <input type="text" id="username-input" placeholder="e.g. SHINOBI_01" maxlength="12" autocomplete="off" required>
+                <span class="cursor-blink">_</span>
+              </div>
+            </div>
+
+            <button type="submit" class="arcade-button-large" id="login-btn">
+              <span class="btn-coin-slot"><i class="fa-solid fa-coins"></i></span>
+              <span class="btn-text">PRESS START [ 1P / 2P ]</span>
+            </button>
+          </form>
+
+          <!-- Room Status Screen -->
+          <div class="cabin-room-preview">
+            <div class="preview-header">
+              <span>ARENA POD SLOTS</span>
+              <span class="status-live">● LIVE SYNC</span>
+            </div>
+            <div class="players-slot-list" id="room-slots-preview">
+              <div class="slot-badge empty">
+                <span class="slot-symbol x-sym">1P [X]</span>
+                <div class="slot-user"><i class="fa-solid fa-user-ninja"></i> <em>WAITING FOR PILOT...</em></div>
+              </div>
+              <div class="slot-badge empty">
+                <span class="slot-symbol o-sym">2P [O]</span>
+                <div class="slot-user"><i class="fa-solid fa-user-astronaut"></i> <em>WAITING FOR PILOT...</em></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Live Battle Arena (Hidden until joined) -->
+        <section class="screen-card game-arena" id="game-section" style="display: none;">
+          
+          <!-- Anime Fighter Duel HUD Bar -->
+          <div class="battle-hud">
+            
+            <!-- 1P Player X Card -->
+            <div class="fighter-card fighter-x" id="card-player-x">
+              <div class="fighter-avatar avatar-x">
+                <i class="fa-solid fa-user-ninja"></i>
+              </div>
+              <div class="fighter-details">
+                <div class="fighter-tag-line">
+                  <span class="fighter-badge">1P / X</span>
+                  <span class="fighter-jp">サイバー忍</span>
+                </div>
+                <h3 class="fighter-name" id="name-player-x">WAITING...</h3>
+                <div class="hp-gauge"><div class="hp-fill hp-x"></div></div>
+              </div>
+              <div class="turn-flair" id="turn-badge-x">ACTIVE TURN</div>
+            </div>
+
+            <!-- VS Anime Emblem -->
+            <div class="vs-emblem">
+              <div class="vs-core">VS</div>
+              <span class="vs-sub">激突</span>
+            </div>
+
+            <!-- 2P Player O Card -->
+            <div class="fighter-card fighter-o" id="card-player-o">
+              <div class="turn-flair" id="turn-badge-o">ACTIVE TURN</div>
+              <div class="fighter-details text-right">
+                <div class="fighter-tag-line justify-end">
+                  <span class="fighter-jp">桜の戦姫</span>
+                  <span class="fighter-badge">2P / O</span>
+                </div>
+                <h3 class="fighter-name" id="name-player-o">WAITING...</h3>
+                <div class="hp-gauge"><div class="hp-fill hp-o"></div></div>
+              </div>
+              <div class="fighter-avatar avatar-o">
+                <i class="fa-solid fa-user-astronaut"></i>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Fight Announcer Banner -->
+          <div class="battle-announcer-banner" id="game-status-banner">
+            <span class="announcer-icon"><i class="fa-solid fa-satellite-dish fa-fade"></i></span>
+            <span class="announcer-text">ROUND 1 // WAITING FOR 2ND FIGHTER TO CONNECT...</span>
+          </div>
+
+          <!-- 3x3 Arcade Matrix Grid -->
+          <div class="grid-arena-wrapper">
+            <div class="arcade-grid-box" id="tic-tac-toe-board">
+              <button class="arcade-cell" data-index="0" aria-label="Slot 1"><span class="cell-content"></span></button>
+              <button class="arcade-cell" data-index="1" aria-label="Slot 2"><span class="cell-content"></span></button>
+              <button class="arcade-cell" data-index="2" aria-label="Slot 3"><span class="cell-content"></span></button>
+              <button class="arcade-cell" data-index="3" aria-label="Slot 4"><span class="cell-content"></span></button>
+              <button class="arcade-cell" data-index="4" aria-label="Slot 5"><span class="cell-content"></span></button>
+              <button class="arcade-cell" data-index="5" aria-label="Slot 6"><span class="cell-content"></span></button>
+              <button class="arcade-cell" data-index="6" aria-label="Slot 7"><span class="cell-content"></span></button>
+              <button class="arcade-cell" data-index="7" aria-label="Slot 8"><span class="cell-content"></span></button>
+              <button class="arcade-cell" data-index="8" aria-label="Slot 9"><span class="cell-content"></span></button>
+            </div>
+          </div>
+
+          <!-- Arcade Action Controls -->
+          <div class="arcade-control-bar">
+            <button class="arcade-push-btn red-btn" id="reset-btn">
+              <i class="fa-solid fa-arrows-rotate"></i> RESTART MATCH (再戦)
+            </button>
+          </div>
+
+        </section>
+
+        <!-- High Scores / Battle History Section -->
+        <section class="screen-card leaderboard-section">
+          <div class="leaderboard-header">
+            <div class="title-with-icon">
+              <i class="fa-solid fa-crown gold-crown"></i>
+              <div>
+                <h2>HALL OF FAME // 戦績履歴</h2>
+                <small>FIREBASE FIRESTORE CLOUD DATABASE RECORDS</small>
+              </div>
+            </div>
+            <button class="arcade-btn-mini" id="refresh-history-btn">
+              <i class="fa-solid fa-arrows-rotate"></i> REFRESH LOGS
+            </button>
+          </div>
+
+          <div class="arcade-table-wrap">
+            <table class="arcade-table">
+              <thead>
+                <tr>
+                  <th>RANK</th>
+                  <th>1P FIGHTER (X)</th>
+                  <th>2P FIGHTER (O)</th>
+                  <th>VICTOR / 勝利者</th>
+                  <th>MOVES</th>
+                  <th>TIMESTAMP</th>
+                </tr>
+              </thead>
+              <tbody id="history-tbody">
+                <tr>
+                  <td colspan="6" class="text-center py-4">NO MATCH RECORDS RECORDED. COMMENCE DUEL!</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </main>
+
+      <div class="bezel-label bottom-left">SYSTEM: NEO-GEO EX-2099</div>
+      <div class="bezel-label bottom-right">SOUND: YM2610 8-BIT STEREO</div>
+    </div>
+
+    <!-- Arcade Cabinet Lower Control Deck Styling -->
+    <footer class="arcade-control-deck">
+      <div class="deck-joystick left">
+        <div class="stick-shaft"><div class="stick-ball red"></div></div>
+        <span class="deck-label">1P STICK</span>
+      </div>
+
+      <div class="deck-buttons">
+        <div class="arcade-button blue-btn"></div>
+        <div class="arcade-button yellow-btn"></div>
+        <div class="arcade-button pink-btn"></div>
+        <div class="arcade-button green-btn"></div>
+      </div>
+
+      <div class="deck-coin-door">
+        <div class="coin-slot">
+          <span class="coin-entry">25¢</span>
+          <span class="coin-lit">INSERT COIN</span>
+        </div>
+      </div>
+
+      <div class="deck-buttons">
+        <div class="arcade-button green-btn"></div>
+        <div class="arcade-button pink-btn"></div>
+        <div class="arcade-button yellow-btn"></div>
+        <div class="arcade-button blue-btn"></div>
+      </div>
+
+      <div class="deck-joystick right">
+        <div class="stick-shaft"><div class="stick-ball blue"></div></div>
+        <span class="deck-label">2P STICK</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Anime K.O. Victory Modal Overlay -->
+  <div class="modal-overlay" id="winner-modal" style="display: none;">
+    <div class="anime-ko-modal">
+      <div class="speed-lines"></div>
+      
+      <div class="ko-badge-wrapper">
+        <div class="ko-stamp" id="modal-ko-stamp">K.O.!</div>
+        <div class="ko-jp-sub">勝 負 あ り</div>
+      </div>
+
+      <div class="ko-icon-box" id="modal-icon">
+        <i class="fa-solid fa-trophy"></i>
+      </div>
+
+      <h2 class="ko-winner-title" id="modal-title">VICTORY // 勝利</h2>
+      <p class="ko-desc" id="modal-body-text">FIGHTER X HAS DESTROYED THE OPPONENT!</p>
+      
+      <div class="anime-rank-badge">
+        <span class="rank-tag">MATCH GRADE</span>
+        <span class="rank-letter" id="modal-rank">SSS</span>
+      </div>
+
+      <div class="ko-modal-actions">
+        <button class="arcade-button-large victory-btn" id="modal-reset-btn">
+          <i class="fa-solid fa-rotate-right"></i> REMATCH [ 再戦開始 ]
+        </button>
+        <button class="arcade-btn-mini" id="modal-close-btn">
+          VIEW ARENA
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Socket.io Client Library -->
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- Client JS logic & 8-bit Audio Synthesizer -->
+  <script src="script.js"></script>
+</body>
+</html>
